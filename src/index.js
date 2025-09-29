@@ -1,15 +1,17 @@
-// src/index.js
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App.jsx';  
-import reportWebVitals from './reportWebVitals';
+// src/main.jsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext'
+import { TranslationProvider } from './context/TranslationContext'
+import './index.css'
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <TranslationProvider>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </TranslationProvider>
   </React.StrictMode>
-);
-
-reportWebVitals();
+)

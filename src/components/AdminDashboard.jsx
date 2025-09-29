@@ -48,11 +48,15 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
 
   const t = translations[language];
 
-  // Analytics data (same as before)
+  // Analytics data
   const totalApplications = applications.length;
   const completedApplications = applications.filter(app => app.isComplete).length;
   const draftApplications = applications.filter(app => !app.isComplete).length;
-  
+
+  const averageMatchScore = applications.length
+    ? Math.round(applications.reduce((acc, app) => acc + (app.matchScore || 0), 0) / applications.length)
+    : 0;
+
   const sectorCounts = applications.reduce((acc, app) => {
     app.formData.sectors?.forEach(sector => {
       acc[sector] = (acc[sector] || 0) + 1;
@@ -75,9 +79,7 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+  const formatDate = (dateString) => new Date(dateString).toLocaleDateString();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,8 +101,8 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
         </div>
       </header>
 
-      {/* Main Content with proper padding */}
-      <div className="pt-24"> {/* Adjusted for admin header height */}
+      {/* Main Content */}
+      <div className="pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">{t.title}</h2>
@@ -112,7 +114,7 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    className={`py-2 px-1 border-b-2 font-medium text-sm cursor-pointer ${
                       activeTab === tab
                         ? 'border-blue-500 text-blue-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -124,7 +126,7 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
               </nav>
             </div>
 
-            {/* Rest of the admin dashboard content remains the same */}
+            {/* Overview Tab */}
             {activeTab === 'overview' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
@@ -141,7 +143,7 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
                 </div>
                 <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
                   <h3 className="text-lg font-semibold text-purple-800">{t.averageMatchScore}</h3>
-                  <p className="text-3xl font-bold text-purple-600">72%</p>
+                  <p className="text-3xl font-bold text-purple-600">{averageMatchScore}%</p>
                 </div>
               </div>
             )}
@@ -172,33 +174,39 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
                   <tbody className="bg-white divide-y divide-gray-200">
                     {applications.map(app => (
                       <tr key={app.id}>
+                        {/* User Info + Education + Skills */}
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {app.formData.education || 'New Candidate'}
+                            {app.userId ? `User: ${app.userId}` : 'Anonymous User'}
                           </div>
                           <div className="text-sm text-gray-500">
+                            {app.formData.education || 'New Candidate'}
+                          </div>
+                          <div className="text-sm mt-1 text-gray-600">
                             {app.formData.skills?.slice(0, 3).join(', ')}
                           </div>
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                             {app.matchScore || 0}%
                           </span>
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            app.isComplete 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
+                            app.isComplete ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {app.isComplete ? t.completed : t.draft}
+                            {app.isComplete ? t.completedApplications : t.draftApplications}
                           </span>
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDate(app.timestamp)}
                         </td>
+
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-blue-600 hover:text-blue-900 mr-3">
+                          <button className="text-blue-600 hover:text-blue-900">
                             {t.viewDetails}
                           </button>
                         </td>
@@ -236,6 +244,7 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>

@@ -1,4 +1,18 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from "../context/TranslationContext";
+
+const MyComponent = () => {
+  const { language, changeLanguage, t } = useTranslation();
+  
+  return (
+    <div>
+      <h1>{t('welcomeBack')}</h1>
+      <button onClick={() => changeLanguage('hi')}>
+        Switch to Hindi
+      </button>
+    </div>
+  );
+};
 
 const CandidateForm = ({ onSubmit, onSaveDraft, onExport, language, prefillData, currentApplication }) => {
   const [formData, setFormData] = useState({

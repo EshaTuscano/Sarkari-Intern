@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "./context/AuthContext";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import Features from "./components/Features";
@@ -10,26 +11,30 @@ import Chatbot from "./components/Chatbot";
 import Footer from "./components/Footer";
 import AdminDashboard from "./components/AdminDashboard";
 import ApplicationManager from "./components/ApplicationManager";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
 import "./App.css";
+import { useTranslation } from "./context/TranslationContext";
 
 function App() {
+  // ------------------- STATES -------------------
   const [recommendations, setRecommendations] = useState([]);
   const [resume, setResume] = useState(null);
-  const [language, setLanguage] = useState('en');
+  const { t } = useTranslation();
   const [extractedData, setExtractedData] = useState(null);
-  const [savedApplications, setSavedApplications] = useState([]);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [currentApplication, setCurrentApplication] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
 
-  // Load saved applications from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('sarkariInternApplications');
-    if (saved) {
-      setSavedApplications(JSON.parse(saved));
-    }
-  }, []);
+  const [language, setLanguage] = useState("en"); // default language
 
-  // Enhanced internship dataset
+  const { currentUser, getUserApplications, saveUserApplication } = useAuth();
+
+  // Load user's applications when user changes
+  const savedApplications = currentUser ? getUserApplications() : [];
+
+  // ------------------- INTERNSHIPS DATA -------------------
   const internships = [
     {
       id: 1,
@@ -39,12 +44,11 @@ function App() {
       location: "Delhi, Bangalore, Hyderabad",
       stipend: "₹15,000/month",
       duration: "3 months",
-      skills: ["React", "Python", "JavaScript", "Digital Governance", "Web Development"],
+      skills: ["React", "Python", "JavaScript", "Digital Governance"],
       education: ["Bachelors", "Masters"],
       description: "Work on digital governance projects and citizen services",
       deadline: "2024-03-15",
-      applyLink: "#",
-      applicants: 45
+      matchScore: 0
     },
     {
       id: 2,
@@ -54,18 +58,77 @@ function App() {
       location: "Delhi, Mumbai, Chennai",
       stipend: "₹20,000/month",
       duration: "6 months",
-      skills: ["Research", "Data Analysis", "Biology", "Public Health", "Statistics"],
+      skills: ["Research", "Data Analysis", "Biology", "Public Health"],
       education: ["Masters", "PhD"],
       description: "Research in public health and healthcare systems",
       deadline: "2024-04-01",
-      applyLink: "#",
-      applicants: 32
+      matchScore: 0
     },
-    // ... other internships (same as before)
+    {
+      id: 3,
+      title: "Agricultural Development Intern",
+      company: "Ministry of Agriculture",
+      sector: "Agriculture",
+      location: "Punjab, Maharashtra, Karnataka",
+      stipend: "₹12,000/month",
+      duration: "4 months",
+      skills: ["Agriculture", "Research", "Field Work", "Sustainability"],
+      education: ["Bachelors", "Masters"],
+      description: "Field research and agricultural development projects",
+      deadline: "2024-03-30",
+      matchScore: 0
+    },
+    {
+      id: 4,
+      title: "Education Policy Research",
+      company: "Ministry of Education",
+      sector: "Education",
+      location: "Delhi, Kolkata",
+      stipend: "₹18,000/month",
+      duration: "5 months",
+      skills: ["Research", "Policy Analysis", "Education", "Writing"],
+      education: ["Masters", "PhD"],
+      description: "Research on education policies and implementation",
+      deadline: "2024-04-10",
+      matchScore: 0
+    },
+    {
+      id: 5,
+      title: "Financial Analysis Intern",
+      company: "Ministry of Finance",
+      sector: "Finance",
+      location: "Delhi, Mumbai",
+      stipend: "₹16,000/month",
+      duration: "3 months",
+      skills: ["Excel", "Analysis", "Accounting", "Economics"],
+      education: ["Bachelors", "Masters"],
+      description: "Financial data analysis and reporting",
+      deadline: "2024-03-25",
+      matchScore: 0
+    },
+    {
+      id: 6,
+      title: "Environmental Research Intern",
+      company: "Ministry of Environment",
+      sector: "Environment",
+      location: "Delhi, Chennai",
+      stipend: "₹14,000/month",
+      duration: "4 months",
+      skills: ["Environmental Science", "Research", "Data Collection"],
+      education: ["Bachelors", "Masters"],
+      description: "Environmental research and conservation projects",
+      deadline: "2024-04-05",
+      matchScore: 0
+    }
   ];
 
-  // Save application to localStorage
+  // Save application to user's data
   const saveApplication = (formData, resumeFile = null, isComplete = false) => {
+    if (!currentUser) {
+      setShowLogin(true);
+      return null;
+    }
+
     const application = {
       id: Date.now().toString(),
       formData,
@@ -73,37 +136,34 @@ function App() {
       timestamp: new Date().toISOString(),
       isComplete,
       matchScore: 0,
-      recommendations: []
+      recommendations: [],
+      userId: currentUser.id,
+      userName: currentUser.name
     };
 
-    const updatedApplications = [...savedApplications, application];
-    setSavedApplications(updatedApplications);
-    localStorage.setItem('sarkariInternApplications', JSON.stringify(updatedApplications));
+    const savedApp = saveUserApplication(application);
+    setCurrentApplication(savedApp);
 
-    // Schedule reminder for incomplete applications
     if (!isComplete) {
-      scheduleReminder(application);
+      scheduleReminder(savedApp);
     }
 
-    return application;
+    return savedApp;
   };
 
   // Schedule email/SMS reminder
   const scheduleReminder = (application) => {
-    // In a real app, this would call your backend API
     console.log('Reminder scheduled for application:', application.id);
     
-    // Simulate reminder after 24 hours
     setTimeout(() => {
       if (!application.isComplete) {
         sendReminder(application);
       }
-    }, 24 * 60 * 60 * 1000); // 24 hours
+    }, 24 * 60 * 60 * 1000);
   };
 
   // Send reminder notification
   const sendReminder = (application) => {
-    // Simulate sending email/SMS
     const message = language === 'en' 
       ? `Reminder: Complete your application for government internships. Continue where you left off!`
       : `अनुस्मारक: सरकारी इंटर्नशिप के लिए अपना आवेदन पूरा करें। जहाँ से छोड़ा था, वहाँ से जारी रखें!`;
@@ -139,72 +199,70 @@ function App() {
     return extracted;
   };
 
-  // Enhanced rule-based matching algorithm
-  const findMatchingInternships = (formData) => {
+  // Enhanced rule-based matching with scoring
+  const handleFormSubmit = (formData, saveAsDraft = false) => {
+    if (!currentUser) {
+      setShowLogin(true);
+      return;
+    }
+
+    if (saveAsDraft) {
+      const application = saveApplication(formData, resume, false);
+      if (application) {
+        alert(language === 'en' 
+          ? 'Application saved as draft! You can continue later.' 
+          : 'आवेदन ड्राफ्ट के रूप में सहेजा गया! आप बाद में जारी रख सकते हैं।'
+        );
+      }
+      return;
+    }
+
     const scoredInternships = internships.map(intern => {
       let score = 0;
       const matchedSkills = [];
-      const matchReasons = [];
-
+      
       // Skill matching (40% weight)
       formData.skills.forEach(skill => {
         if (intern.skills.some(internSkill => 
           internSkill.toLowerCase().includes(skill.toLowerCase()) ||
           skill.toLowerCase().includes(internSkill.toLowerCase())
         )) {
-          score += 8;
+          score += 10;
           matchedSkills.push(skill);
-          matchReasons.push(`Skill: ${skill}`);
         }
       });
-
+      
       // Sector matching (30% weight)
       if (formData.sectors.some(sector => 
         intern.sector.toLowerCase().includes(sector.toLowerCase()) ||
         sector.toLowerCase().includes(intern.sector.toLowerCase())
       )) {
         score += 30;
-        matchReasons.push(`Sector: ${intern.sector}`);
       }
-
+      
       // Location matching (20% weight)
       if (formData.location && intern.location.toLowerCase().includes(formData.location.toLowerCase())) {
         score += 20;
-        matchReasons.push(`Location: ${intern.location}`);
       }
-
+      
       // Education matching (10% weight)
       if (formData.education && intern.education.includes(formData.education)) {
         score += 10;
-        matchReasons.push(`Education: ${formData.education}`);
       }
-
+      
       return {
         ...intern,
         matchScore: Math.min(score, 100),
-        matchedSkills,
-        matchReasons
+        matchedSkills
       };
     });
-
-    return scoredInternships
+    
+    // Sort by score and get top 5
+    const matched = scoredInternships
       .filter(intern => intern.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore)
       .slice(0, 5);
-  };
-
-  const handleFormSubmit = (formData, saveAsDraft = false) => {
-    if (saveAsDraft) {
-      const application = saveApplication(formData, resume, false);
-      setCurrentApplication(application);
-      alert(language === 'en' 
-        ? 'Application saved as draft! You can continue later.' 
-        : 'आवेदन ड्राफ्ट के रूप में सहेजा गया! आप बाद में जारी रख सकते हैं।'
-      );
-      return;
-    }
-
-    const matched = findMatchingInternships(formData);
+    
     setRecommendations(matched);
     
     // Save as complete application
@@ -213,11 +271,11 @@ function App() {
   };
 
   const handleStartJourney = () => {
-    document.getElementById("discover-section")?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleLanguageChange = (lang) => {
-    setLanguage(lang);
+    if (!currentUser) {
+      setShowLogin(true);
+    } else {
+      document.getElementById("discover-section")?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const handleNavigation = (sectionId) => {
@@ -238,6 +296,10 @@ function App() {
   const exportApplication = (application) => {
     const data = {
       candidate: application.formData,
+      user: {
+        name: application.userName,
+        id: application.userId
+      },
       resume: application.resume,
       generatedResume: generateEnhancedResume(application),
       timestamp: application.timestamp,
@@ -281,15 +343,44 @@ function App() {
     }
   }, [extractedData]);
 
+  // Initialize demo user data
+  useEffect(() => {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    if (users.length === 0) {
+      // Create demo user
+      const demoUser = {
+        name: "Demo User",
+        email: "test@example.com",
+        password: "password123"
+      };
+      users.push(demoUser);
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+  }, []);
+
+  // Helper function to get all applications from all users (for admin)
+  const getAllApplications = () => {
+    const applications = [];
+    const keys = Object.keys(localStorage);
+    
+    keys.forEach(key => {
+      if (key.startsWith('applications_')) {
+        const userApplications = JSON.parse(localStorage.getItem(key) || '[]');
+        applications.push(...userApplications);
+      }
+    });
+    
+    return applications;
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header 
         onStartJourney={handleStartJourney} 
-        onLanguageChange={handleLanguageChange} 
         onNavigate={handleNavigation} 
       />
       
-      {/* Admin Dashboard Toggle (Hidden in production) */}
+      {/* Admin Dashboard Toggle */}
       <div className="fixed top-20 right-4 z-40">
         <button
           onClick={() => setShowAdminDashboard(!showAdminDashboard)}
@@ -299,14 +390,36 @@ function App() {
         </button>
       </div>
 
+      {/* Auth Modals */}
+      {showLogin && (
+        <Login 
+          onClose={() => setShowLogin(false)}
+          onSwitchToSignup={() => {
+            setShowLogin(false);
+            setShowSignup(true);
+          }}
+          language={language}
+        />
+      )}
+      
+      {showSignup && (
+        <Signup 
+          onClose={() => setShowSignup(false)}
+          onSwitchToLogin={() => {
+            setShowSignup(false);
+            setShowLogin(true);
+          }}
+          language={language}
+        />
+      )}
+
       {showAdminDashboard ? (
-       // In your App.jsx, update the AdminDashboard component call:
-<AdminDashboard 
-  applications={savedApplications}
-  internships={internships}
-  language={language}
-  onToggleView={() => setShowAdminDashboard(false)}
-/>
+        <AdminDashboard 
+          applications={getAllApplications()}
+          internships={internships}
+          language={language}
+          onToggleView={() => setShowAdminDashboard(false)}
+        />
       ) : (
         <>
           <section id="home">
@@ -318,6 +431,21 @@ function App() {
           </section>
           
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            {/* Welcome Message for Logged-in Users */}
+            {currentUser && (
+              <div className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-xl">
+                <h2 className="text-2xl font-bold text-blue-900 mb-2">
+                  {language === 'en' ? `Welcome back, ${currentUser.name}!` : `वापसी पर स्वागत है, ${currentUser.name}!`}
+                </h2>
+                <p className="text-blue-700">
+                  {language === 'en' 
+                    ? 'Continue your internship search or start a new application.'
+                    : 'अपनी इंटर्नशिप खोज जारी रखें या एक नया आवेदन शुरू करें।'
+                  }
+                </p>
+              </div>
+            )}
+
             {/* Application Manager */}
             {savedApplications.length > 0 && (
               <ApplicationManager
@@ -340,6 +468,27 @@ function App() {
                   }
                 </p>
               </div>
+
+              {/* Login Prompt for Anonymous Users */}
+              {!currentUser && (
+                <div className="max-w-2xl mx-auto mb-8 p-6 bg-yellow-50 border border-yellow-200 rounded-xl text-center">
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+                    {language === 'en' ? 'Login to Save Your Progress' : 'अपनी प्रगति सहेजने के लिए लॉगिन करें'}
+                  </h3>
+                  <p className="text-yellow-700 mb-4">
+                    {language === 'en' 
+                      ? 'Create an account to save your applications and get personalized recommendations.'
+                      : 'अपने आवेदन सहेजने और व्यक्तिगत सिफारिशें प्राप्त करने के लिए एक खाता बनाएं।'
+                    }
+                  </p>
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors font-medium"
+                  >
+                    {language === 'en' ? 'Login / Sign Up' : 'लॉगिन / साइन अप'}
+                  </button>
+                </div>
+              )}
 
               <ResumeUpload 
                 onFile={handleResumeUpload} 
@@ -367,6 +516,7 @@ function App() {
                 <CandidateForm 
                   onSubmit={handleFormSubmit}
                   onSaveDraft={(data) => handleFormSubmit(data, true)}
+                  onExport={exportApplication}
                   language={language}
                   prefillData={extractedData}
                   currentApplication={currentApplication}

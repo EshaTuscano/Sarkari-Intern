@@ -1,19 +1,31 @@
+// src/components/Header.jsx
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useTranslation } from "../context/TranslationContext";
 
-const Header = ({ onStartJourney, onLanguageChange, onNavigate }) => {
+const Header = ({ onStartJourney, onNavigate }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const { currentUser, logout } = useAuth();
+  const { language, changeLanguage, t } = useTranslation();
 
   const navItems = [
-    { label: "Home", href: "home" },
-    { label: "How It Works", href: "how-it-works" },
-    { label: "Browse Internships", href: "internships" },
-    { label: "About Us", href: "about" },
-    { label: "Contact", href: "contact" }
+    { label: t('home'), href: "home" },
+    { label: t('howItWorks'), href: "how-it-works" },
+    { label: t('browseInternships'), href: "internships" },
+    { label: t('aboutUs'), href: "about" },
+    { label: t('contact'), href: "contact" }
   ];
 
   const handleNavClick = (sectionId) => {
-    onNavigate(sectionId);
-    setIsOpen(false); // Close mobile menu after click
+    if (onNavigate) {
+      onNavigate(sectionId);
+    }
+    setIsOpen(false);
+  };
+
+  const handleLanguageChange = (e) => {
+    changeLanguage(e.target.value);
   };
 
   return (
@@ -44,21 +56,52 @@ const Header = ({ onStartJourney, onLanguageChange, onNavigate }) => {
           ))}
         </nav>
 
-        {/* Desktop CTA & Language */}
+        {/* Desktop CTA & Language & User Menu */}
         <div className="hidden md:flex items-center gap-4">
           <select 
+            value={language}
+            onChange={handleLanguageChange}
             className="border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:border-blue-500"
-            onChange={(e) => onLanguageChange(e.target.value)}
           >
             <option value="en">English</option>
             <option value="hi">हिन्दी</option>
           </select>
-          <button
-            onClick={onStartJourney}
-            className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm"
-          >
-            Get Started
-          </button>
+          
+          {currentUser ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-gray-700">{currentUser.name}</span>
+              </button>
+              
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{currentUser.name}</p>
+                    <p className="text-xs text-gray-500">{currentUser.email}</p>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    {language === 'en' ? 'Logout' : 'लॉगआउट'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onStartJourney}
+              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm"
+            >
+              {t('getStarted')}
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -88,18 +131,36 @@ const Header = ({ onStartJourney, onLanguageChange, onNavigate }) => {
               </button>
             ))}
             <select 
+              value={language}
+              onChange={handleLanguageChange}
               className="border border-gray-300 rounded-lg px-3 py-2 my-2 focus:outline-none focus:border-blue-500"
-              onChange={(e) => onLanguageChange(e.target.value)}
             >
               <option value="en">English</option>
               <option value="hi">हिन्दी</option>
             </select>
-            <button
-              onClick={() => { onStartJourney(); setIsOpen(false); }}
-              className="mt-2 bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
-            >
-              Get Started
-            </button>
+            {currentUser ? (
+              <div className="flex items-center gap-3 p-3 border-t">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{currentUser.name}</p>
+                  <button
+                    onClick={logout}
+                    className="text-sm text-red-600 hover:text-red-800"
+                  >
+                    {language === 'en' ? 'Logout' : 'लॉगआउट'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => { onStartJourney(); setIsOpen(false); }}
+                className="mt-2 bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+              >
+                {t('getStarted')}
+              </button>
+            )}
           </nav>
         </div>
       )}
