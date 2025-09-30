@@ -158,12 +158,12 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
   }));
 
   // Placement Statistics (Mock data for demo)
-  const placementStats = {
+ /* const placementStats = {
     totalCandidates: totalApplications,
     placed: Math.round(totalApplications * 0.65),
     notPlaced: Math.round(totalApplications * 0.35),
     placementRate: 65
-  };
+  };*/
 
   // Diversity Score Calculation
   const diversityScore = Math.round(
@@ -468,3 +468,18 @@ const AdminDashboard = ({ applications, internships, language, onToggleView }) =
 };
 
 export default AdminDashboard;
+
+
+// Add new tab to navigation
+//{['overview', 'applications', 'allocations', 'analytics', 'fairness'].map(tab => (
+  // ... existing tab code
+//))}
+
+// Add Allocation Dashboard component
+//{activeTab === 'allocations' && (
+  //<AllocationDashboard 
+    //applications={applications}
+    //internships={internships}
+    //language={language}
+ // />
+//)}

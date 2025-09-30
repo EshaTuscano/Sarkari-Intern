@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-
 const CandidateForm = ({ onSubmit, onSaveDraft, onExport, language, prefillData, currentApplication, onResumeParse }) => {
   const [formData, setFormData] = useState({
     education: '',
@@ -239,7 +238,7 @@ const CandidateForm = ({ onSubmit, onSaveDraft, onExport, language, prefillData,
     }
   }, [currentApplication]);
 
-  const t = translations[language];
+  const t = translations[language] || translations.en;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -282,20 +281,6 @@ const CandidateForm = ({ onSubmit, onSaveDraft, onExport, language, prefillData,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Call the onSubmit prop if provided (for existing functionality)
-    if (onSubmit) {
-      onSubmit(formData);
-    }
-    
-    // Generate recommendations based on form data
-    const generatedRecommendations = generateRecommendations(formData);
-    setRecommendations(generatedRecommendations);
-    setShowRecommendations(true);
-  };
-
   // Enhanced matching algorithm with weighted scoring
   const calculateMatchScore = (candidate, internship) => {
     let skillsScore = 0;
@@ -307,7 +292,7 @@ const CandidateForm = ({ onSubmit, onSaveDraft, onExport, language, prefillData,
     const candidateSkills = candidate.skills.map(skill => skill.toLowerCase());
     const internshipSkills = internship.requiredSkills.map(skill => skill.toLowerCase());
     const commonSkills = candidateSkills.filter(skill => internshipSkills.includes(skill));
-    skillsScore = (commonSkills.length / internshipSkills.length) * 40;
+    skillsScore = internshipSkills.length > 0 ? (commonSkills.length / internshipSkills.length) * 40 : 0;
 
     // Location Match (20%)
     if (candidate.locationPreference === internship.locationType) {
@@ -350,57 +335,57 @@ const CandidateForm = ({ onSubmit, onSaveDraft, onExport, language, prefillData,
     const mockInternships = [
       {
         id: 1,
-        title: language === 'en' ? "Frontend Developer Intern" : "फ्रंटएंड डेवलपर इंटर्न",
+        title: language === 'hi' ? "फ्रंटएंड डेवलपर इंटर्न" : "Frontend Developer Intern",
         company: "Tech Solutions Inc.",
         stipend: "₹15,000/month",
         duration: "3 months",
         location: "Delhi",
         locationType: "metro",
-        description: language === 'en' 
-          ? "Work on React.js projects and modern web development"
-          : "React.js प्रोजेक्ट्स और आधुनिक वेब डेवलपमेंट पर काम करें",
+        description: language === 'hi' 
+          ? "React.js प्रोजेक्ट्स और आधुनिक वेब डेवलपमेंट पर काम करें"
+          : "Work on React.js projects and modern web development",
         requiredSkills: ["JavaScript", "React", "HTML", "CSS", "Tailwind CSS"],
         sector: "it"
       },
       {
         id: 2,
-        title: language === 'en' ? "Marketing Intern" : "मार्केटिंग इंटर्न",
+        title: language === 'hi' ? "मार्केटिंग इंटर्न" : "Marketing Intern",
         company: "Digital Marketing Pro",
         stipend: "₹12,000/month",
         duration: "6 months",
         location: "Mumbai",
         locationType: "metro",
-        description: language === 'en'
-          ? "Social media management and content creation"
-          : "सोशल मीडिया प्रबंधन और कंटेंट क्रिएशन",
+        description: language === 'hi'
+          ? "सोशल मीडिया प्रबंधन और कंटेंट क्रिएशन"
+          : "Social media management and content creation",
         requiredSkills: ["Marketing", "Social Media", "Content Writing", "SEO"],
         sector: "marketing"
       },
       {
         id: 3,
-        title: language === 'en' ? "Data Analyst Intern" : "डेटा एनालिस्ट इंटर्न",
+        title: language === 'hi' ? "डेटा एनालिस्ट इंटर्न" : "Data Analyst Intern",
         company: "Analytics Corp",
         stipend: "₹18,000/month",
         duration: "4 months",
         location: "Remote",
         locationType: "tier2",
-        description: language === 'en'
-          ? "Data analysis and visualization using Python and SQL"
-          : "Python और SQL का उपयोग करके डेटा विश्लेषण और विज़ुअलाइज़ेशन",
+        description: language === 'hi'
+          ? "Python और SQL का उपयोग करके डेटा विश्लेषण और विज़ुअलाइज़ेशन"
+          : "Data analysis and visualization using Python and SQL",
         requiredSkills: ["Python", "SQL", "Data Analysis", "Excel"],
         sector: "it"
       },
       {
         id: 4,
-        title: language === 'en' ? "Rural Development Intern" : "ग्रामीण विकास इंटर्न",
+        title: language === 'hi' ? "ग्रामीण विकास इंटर्न" : "Rural Development Intern",
         company: "PM Internship Smart Placement",
         stipend: "₹10,000/month",
         duration: "6 months",
         location: "Rural Maharashtra",
         locationType: "rural",
-        description: language === 'en'
-          ? "Work on rural development projects and community outreach"
-          : "ग्रामीण विकास परियोजनाओं और सामुदायिक आउटरीच पर काम करें",
+        description: language === 'hi'
+          ? "ग्रामीण विकास परियोजनाओं और सामुदायिक आउटरीच पर काम करें"
+          : "Work on rural development projects and community outreach",
         requiredSkills: ["Community Development", "Communication", "Project Management"],
         sector: "education"
       }
@@ -413,6 +398,20 @@ const CandidateForm = ({ onSubmit, onSaveDraft, onExport, language, prefillData,
       }))
       .filter(rec => rec.score.finalScore > 40)
       .sort((a, b) => b.score.finalScore - a.score.finalScore);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Generate recommendations
+    const newRecommendations = generateRecommendations(formData);
+    setRecommendations(newRecommendations);
+    setShowRecommendations(true);
+    
+    // Call the onSubmit prop if provided (for existing functionality)
+    if (onSubmit) {
+      onSubmit(formData);
+    }
   };
 
   const nextStep = () => setStep(prev => Math.min(prev + 1, 5));

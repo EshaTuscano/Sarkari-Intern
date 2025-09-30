@@ -6,7 +6,6 @@ import Features from "./components/Features";
 import CandidateForm from "./components/CandidateForm";
 import InternshipCard from "./components/InternshipCard";
 import Testimonials from "./components/Testimonials";
-import Chatbot from "./components/Chatbot";
 import Footer from "./components/Footer";
 import AdminDashboard from "./components/AdminDashboard";
 import ApplicationManager from "./components/ApplicationManager";
@@ -14,6 +13,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import "./App.css";
 import { internships, getSortedInternshipsForCandidate } from "./data/internships";
+import VoiceChat from "./components/VoiceChats";
 
 function App() {
   // Initialize demo user data
@@ -500,6 +500,12 @@ useEffect(() => {
               </div>
             </section>
 
+            <div className="max-w-4xl mx-auto mb-20">
+  <h2>🗣️ AI Voice Assistant</h2>
+  <VoiceChat />
+</div>
+
+
             {recommendations.length > 0 && (
               <section id="internships" className="mb-20">
                 <div className="text-center mb-12">
@@ -596,7 +602,7 @@ useEffect(() => {
             </section>
           </main>
 
-          <Chatbot language={language} />
+         
           <Footer language={language} />
         </>
       )}
