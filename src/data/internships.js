@@ -130,7 +130,6 @@ export const internships = [
   }
 ];
 
-
 // Utility function to calculate match score for a candidate
 export const calculateInternshipMatch = (candidate, internship) => {
   let skillsScore = 0;
